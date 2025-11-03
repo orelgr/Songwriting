@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Save Song</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 200px;
+            font-family: monospace;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1e40af;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 בדיקת שמירת שיר</h1>
+
+    <div class="form-group">
+        <label>שם השיר:</label>
+        <input type="text" id="title" value="שיר בדיקה" />
+    </div>
+
+    <div class="form-group">
+        <label>מחבר:</label>
+        <input type="text" id="author" value="אמן בדיקה" />
+    </div>
+
+    <div class="form-group">
+        <label>תוכן (ChordPro):</label>
+        <textarea id="content">[C]זה שיר [Am]בדיקה
+[F]לבדיקת [G]השמירה
+[C]האם זה [Am]עובד [F]טוב[G]?</textarea>
+    </div>
+
+    <button onclick="testSave()">💾 שמור שיר</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function testSave() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'שומר...';
+            resultDiv.className = '';
+
+            const songData = {
+                title: document.getElementById('title').value,
+                author: document.getElementById('author').value,
+                content_chordpro: document.getElementById('content').value,
+                capo: 0,
+                transpose_semitones: 0,
+                folder_id: null
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/songs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(songData),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ הצלחה!</strong><br>
+                        השיר נשמר בהצלחה!<br>
+                        ID: ${data.id}<br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <strong>❌ שגיאה!</strong><br>
+                        ${data.error || 'שגיאה לא ידועה'}<br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <strong>❌ שגיאת רשת!</strong><br>
+                    ${error.message}<br>
+                    האם השרת רץ? בדוק ש-Backend רץ על http://localhost:5000
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

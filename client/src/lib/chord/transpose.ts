@@ -90,21 +90,34 @@ export function transposeNote(note: string, semitones: number, preferSharps: boo
  * @returns The simplified note
  */
 function simplifyEnharmonic(note: string, preferSharps: boolean): string {
-  const enharmonics = Note.enharmonic(note);
+  if (!note) return note;
 
-  if (!enharmonics || enharmonics.length === 0) return note;
+  // Note.enharmonic returns a single string, not an array
+  const enharmonic = Note.enharmonic(note);
 
-  // Filter out double sharps/flats unless necessary
-  const simpleNotes = enharmonics.filter(n => !n.includes('##') && !n.includes('bb'));
+  if (!enharmonic) return note;
 
-  if (simpleNotes.length === 0) return note;
+  // Choose between the original and enharmonic based on preference
+  const hasSharp = note.includes('#');
+  const hasFlat = note.includes('b');
+  const enharmonicHasSharp = enharmonic.includes('#');
+  const enharmonicHasFlat = enharmonic.includes('b');
+
+  // Avoid double sharps/flats
+  if (note.includes('##') || note.includes('bb')) {
+    return enharmonic;
+  }
 
   if (preferSharps) {
-    // Prefer sharps
-    return simpleNotes.find(n => n.includes('#')) || simpleNotes[0];
+    // Prefer sharps over flats
+    if (hasSharp) return note;
+    if (enharmonicHasSharp) return enharmonic;
+    return note;
   } else {
-    // Prefer flats
-    return simpleNotes.find(n => n.includes('b')) || simpleNotes[0];
+    // Prefer flats over sharps
+    if (hasFlat) return note;
+    if (enharmonicHasFlat) return enharmonic;
+    return note;
   }
 }
 
@@ -167,7 +180,7 @@ export function calculateCapo(originalKey: string, targetKey: string): number {
 
   if (!original.name || !target.name) return 0;
 
-  const semitones = Note.distance(original.name, target.name);
+  const semitones = Interval.distance(original.name, target.name);
   const capo = Interval.semitones(semitones) || 0;
 
   // Ensure positive capo position

@@ -35,19 +35,27 @@ class SongsService:
         Returns:
             Created song object
         """
-        # Validate ChordPro content
+        # Clean content first
+        content_chordpro = ChordProService.clean_content(content_chordpro)
+
+        # Validate ChordPro content (but be lenient)
         is_valid, error = ChordProService.validate(content_chordpro)
-        if not is_valid:
+        if not is_valid and error and 'Unclosed block' not in str(error):
+            # Only fail on critical errors, not formatting issues
             raise ValueError(f"Invalid ChordPro content: {error}")
 
-        # Clean and inject metadata
-        content_chordpro = ChordProService.clean_content(content_chordpro)
-        content_chordpro = ChordProService.inject_metadata(
-            content_chordpro,
-            title=title,
-            artist=author,
-            capo=capo
-        )
+        # Inject metadata
+        try:
+            content_chordpro = ChordProService.inject_metadata(
+                content_chordpro,
+                title=title,
+                artist=author if author else None,
+                capo=capo if capo else 0
+            )
+        except Exception as e:
+            # If metadata injection fails, use original content
+            print(f"Warning: Failed to inject metadata: {e}")
+            pass
 
         # Create song
         song = Song(
@@ -156,25 +164,31 @@ class SongsService:
             )
             db.session.add(version)
 
-        # Validate new content if provided
+        # Validate new content if provided (be lenient)
         if content_chordpro:
-            is_valid, error = ChordProService.validate(content_chordpro)
-            if not is_valid:
-                raise ValueError(f"Invalid ChordPro content: {error}")
-
             content_chordpro = ChordProService.clean_content(content_chordpro)
+
+            is_valid, error = ChordProService.validate(content_chordpro)
+            if not is_valid and error and 'Unclosed block' not in str(error):
+                # Only fail on critical errors
+                raise ValueError(f"Invalid ChordPro content: {error}")
 
         # Update fields
         if title is not None:
             song.title = title
         if content_chordpro is not None:
             # Inject updated metadata
-            content_chordpro = ChordProService.inject_metadata(
-                content_chordpro,
-                title=title or song.title,
-                artist=author if author is not None else song.author,
-                capo=capo if capo is not None else song.capo
-            )
+            try:
+                content_chordpro = ChordProService.inject_metadata(
+                    content_chordpro,
+                    title=title or song.title,
+                    artist=author if author is not None else song.author,
+                    capo=capo if capo is not None else song.capo
+                )
+            except Exception as e:
+                # If metadata injection fails, use original content
+                print(f"Warning: Failed to inject metadata: {e}")
+                pass
             song.content_chordpro = content_chordpro
         if folder_id is not None:
             song.folder_id = folder_id

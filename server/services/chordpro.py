@@ -117,6 +117,9 @@ class ChordProService:
         Returns:
             Updated ChordPro content with metadata
         """
+        if not content:
+            content = ""
+
         lines = content.split('\n')
         metadata_lines = []
         content_lines = []
@@ -176,7 +179,8 @@ class ChordProService:
             result.extend(new_metadata)
         if metadata_lines:
             result.extend(metadata_lines)
-        if result and content_lines and content_lines[0]:  # Add empty line between metadata and content
+        # Add empty line between metadata and content if both exist and content has text
+        if result and content_lines and len(content_lines) > 0 and any(line.strip() for line in content_lines):
             result.append('')
         result.extend(content_lines)
 

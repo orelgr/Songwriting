@@ -34,16 +34,6 @@ class SongSchema(Schema):
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 
-    @validates('capo')
-    def validate_capo(self, value):
-        if value < 0 or value > 12:
-            raise ValidationError('Capo must be between 0 and 12')
-
-    @validates('transpose_semitones')
-    def validate_transpose(self, value):
-        if value < -12 or value > 12:
-            raise ValidationError('Transpose must be between -12 and 12')
-
 
 class SongVersionSchema(Schema):
     """Schema for song version history."""

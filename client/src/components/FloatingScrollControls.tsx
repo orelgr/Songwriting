@@ -9,7 +9,7 @@ interface FloatingScrollControlsProps {
 export default function FloatingScrollControls({ containerRef, disabled = false }: FloatingScrollControlsProps) {
   const [speed, setSpeed] = useState(30)
   const [showControls, setShowControls] = useState(false)
-  const { start, stop, isScrolling, setSpeed: updateScrollSpeed } = useAutoScroll(containerRef)
+  const { start, stop, isScrolling, isPaused, setSpeed: updateScrollSpeed } = useAutoScroll(containerRef)
 
   // Check for reduced motion preference
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -195,10 +195,10 @@ export default function FloatingScrollControls({ containerRef, disabled = false 
           }}
           title={isScrolling ? 'עצור גלילה (Spacebar)' : 'התחל גלילה (Spacebar)'}
         >
-          {isScrolling ? '⏸' : '▶'}
+          {isPaused ? '⏯' : (isScrolling ? '⏸' : '▶')}
 
           {/* Pulsing animation when scrolling */}
-          {isScrolling && (
+          {isScrolling && !isPaused && (
             <div
               style={{
                 position: 'absolute',
@@ -210,13 +210,27 @@ export default function FloatingScrollControls({ containerRef, disabled = false 
               }}
             />
           )}
+
+          {/* Paused indicator */}
+          {isPaused && (
+            <div
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                border: '2px solid orange',
+                animation: 'none'
+              }}
+            />
+          )}
         </button>
 
         {/* Speed indicator when scrolling */}
         {isScrolling && (
           <div
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              backgroundColor: isPaused ? 'rgba(255, 165, 0, 0.6)' : 'rgba(0, 0, 0, 0.6)',
               color: 'white',
               padding: '4px 12px',
               borderRadius: '20px',
@@ -226,7 +240,7 @@ export default function FloatingScrollControls({ containerRef, disabled = false 
               backdropFilter: 'blur(10px)'
             }}
           >
-            {speed} px/s
+            {isPaused ? 'מושהה' : `${speed} px/s`}
           </div>
         )}
       </div>

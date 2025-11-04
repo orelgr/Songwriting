@@ -9,7 +9,7 @@ interface AutoScrollControlsProps {
 export default function AutoScrollControls({ containerRef, disabled = false }: AutoScrollControlsProps) {
   const [speed, setSpeed] = useState(30)
   const [showSpeedControl, setShowSpeedControl] = useState(false)
-  const { start, stop, isScrolling, setSpeed: updateScrollSpeed } = useAutoScroll(containerRef)
+  const { start, stop, isScrolling, isPaused, setSpeed: updateScrollSpeed } = useAutoScroll(containerRef)
 
   // Check for reduced motion preference
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -252,12 +252,14 @@ export default function AutoScrollControls({ containerRef, disabled = false }: A
           <div style={{
             width: '8px',
             height: '8px',
-            backgroundColor: 'var(--color-secondary)',
+            backgroundColor: isPaused ? 'var(--color-warning)' : 'var(--color-secondary)',
             borderRadius: '50%',
-            animation: 'pulse 1.5s infinite'
+            animation: isPaused ? 'none' : 'pulse 1.5s infinite'
           }}></div>
           <span className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>
-            גלילה פעילה במהירות {speed} פיקסלים לשנייה
+            {isPaused
+              ? 'גלילה מושהית זמנית - גלול ידנית כרצונך'
+              : `גלילה פעילה במהירות ${speed} פיקסלים לשנייה`}
           </span>
         </div>
       )}
